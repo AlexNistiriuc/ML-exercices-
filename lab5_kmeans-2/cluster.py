@@ -8,7 +8,7 @@ from numpy.random import uniform
 class KMeans:
     def __init__(self, n_cl: int, n_init: int = 1,
                  initial_centers: Optional[np.ndarray] = None,
-                 verbose: bool = False) -> None:
+                 verbose: bool = True) -> None:
         """
         Parameters
         ----------

@@ -8,7 +8,7 @@ from numpy.random import uniform
 class KMeans:
     def __init__(self, n_cl: int, n_init: int = 1,
                  initial_centers: Optional[np.ndarray] = None,
-                 verbose: bool = False) -> None:
+                 verbose: bool = True) -> None:
         """
         Parameters
         ----------
@@ -83,19 +83,19 @@ class KMeans:
             For each point in X compute the new assigment, based on the distances
             between it and all centers.
             """
-            new_assignments = None # TODO
+            new_assignments = np.min(np.sum(X[:, None, :] - centers[None, : , :] **2 , axis = 2) , axis = 1)
 
             """
             Update the centers.
             """
-            centers = None # TODO
+            centers = np.array(X[new_assignments == i].mean(axis=0) for i in range(self.n_cl))
 
             """
             Check the break condition.
             """
-            if True: # TODO
+            if new_assignments == old_assignments:
                 break
-
+            
             # update
             old_assignments = new_assignments
 
@@ -113,7 +113,7 @@ class KMeans:
             computed cost function.
         """
 
-        return np.random.rand(1)[0] # TODO
+        return np.sum(np.sum(X - centers[assignments]) **2, axis=1)
 
     def fit_predict(self, X: np.ndarray):
         """
