@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 plt.ion()
 
 
-def spectral_clustering(data, n_cl, sigma=1., fiedler_solution=False):
+def spectral_clustering(data, n_cl, sigma=1., fiedler_solution=True):
     """
     Spectral clustering.
 
@@ -27,16 +27,19 @@ def spectral_clustering(data, n_cl, sigma=1., fiedler_solution=False):
         computed assignment. Has shape (n_samples,)
     """
     # compute affinity matrix
-    affinity_matrix = ...
+    distances = np.linalg.norm(data[:, None] - data[None, :], axis=2)
+    affinity_matrix = np.exp(- (distances ** 2) / (2 * (sigma ** 2)))
+
 
     # compute degree matrix
-    degree_matrix = ...
+    degree_matrix = np.diag(np.sum(affinity_matrix, axis=1))
+
 
     # compute laplacian
-    laplacian_matrix = ...
+    laplacian_matrix = degree_matrix - affinity_matrix
 
     # compute eigenvalues and vectors (suggestion: np.linalg is your friend)
-    eigenvalues, eigenvectors = np.random.rand(2, 10), np.random.rand(10, 10)  # TODO
+    eigenvalues, eigenvectors = np.linalg.eigh(laplacian_matrix)
 
     # ensure we are not using complex numbers - you shouldn't btw
     if eigenvalues.dtype == 'complex128':
@@ -44,14 +47,17 @@ def spectral_clustering(data, n_cl, sigma=1., fiedler_solution=False):
         eigenvalues, eigenvectors = eigenvalues.real, eigenvectors.real
 
     # sort eigenvalues and vectors
-    eigenvalues, eigenvectors = np.random.rand(2, 10), np.random.rand(10, 10)  # TODO
+    idx = np.argsort(eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
 
     # SOLUTION A: Fiedler-vector solution
     # - consider only the SECOND smallest eigenvector
     # - threshold it at zero
     # - return as labels
-    labels = ...
     if fiedler_solution:
+        fiedler = eigenvectors[: , 1]
+        labels = (fiedler > 0).astype(int)
         return labels
 
     # SOLUTION B: K-Means solution
@@ -59,8 +65,10 @@ def spectral_clustering(data, n_cl, sigma=1., fiedler_solution=False):
     # - use them as features instead of data for KMeans
     # - You want to use sklearn's implementation (;
     # - return KMeans' clusters
-    new_features = ...
-    labels = np.random.randint(0, n_cl, size=data.shape[0])  # TODO
+    new_features = eigenvectors[:, 1: n_cl + 1]
+
+    kmeans = KMeans(n_clusters=n_cl, n_init='auto')
+    labels = kmeans.fit_predict(new_features)
 
     return labels
 
@@ -72,14 +80,14 @@ def main_spectral_clustering():
 
     # generate the dataset
     data, cl = two_moon_dataset(n_samples=300, noise=0.1)
-    # data, cl = gaussians_dataset(n_gaussian=3, n_points=[100, 100, 70], mus=[[1, 1], [-4, 6], [8, 8]], stds=[[1, 1], [3, 3], [1, 1]])
+    #data, cl = gaussians_dataset(n_gaussian=3, n_points=[100, 100, 70], mus=[[1, 1], [-4, 6], [8, 8]], stds=[[1, 1], [3, 3], [1, 1]])
 
     # visualize the dataset
     _, ax = plt.subplots(1, 2)
     ax[0].scatter(data[:, 0], data[:, 1], c=cl, s=40)
 
     # run spectral clustering - tune n_cl and sigma!!!
-    labels = spectral_clustering(data, n_cl=15, sigma=0.009)
+    labels = spectral_clustering(data, n_cl=3, sigma=0.1)
 
     # visualize results
     ax[1].scatter(data[:, 0], data[:, 1], c=labels, s=40)
